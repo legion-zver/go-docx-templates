@@ -34,12 +34,13 @@ func (item *TableItem) Type() DocItemType {
 
 // TableParams - Params table 
 type TableParams struct {
-    Width    WidthValue    `xml:"tblW"`
-    Jc       StringValue   `xml:"jc"`
-    Ind      WidthValue    `xml:"tblInd"`    
-    Borders  TableBorders  `xml:"tblBorders"`
-    Shadow   ShadowValue   `xml:"shd"`
-    Layout   TableLayout   `xml:"tblLayout"`
+    Width    *WidthValue    `xml:"tblW,omitempty"`
+    Jc       *StringValue   `xml:"jc,omitempty"`
+    Ind      *WidthValue    `xml:"tblInd,omitempty"`
+    Borders  *TableBorders  `xml:"tblBorders,omitempty"`
+    Shadow   *ShadowValue   `xml:"shd,omitempty"`
+    Layout   *TableLayout   `xml:"tblLayout,omitempty"`
+    DocGrid  *IntValue      `xml:"docGrid,omitempty"`
 }
 
 // TableLayout - layout params
@@ -88,11 +89,15 @@ type TableCell struct {
 
 // TableCellParams - cell params
 type TableCellParams struct {
-    Width           WidthValue     `xml:"tcW"`
-    Borders         TableBorders   `xml:"tcBorders"`
-    Shadow          ShadowValue    `xml:"shd"`
-    Margins         Margins        `xml:"tcMar"`
-    VerticalAlign   StringValue    `xml:"vAlign"`
+    Width           *WidthValue     `xml:"tcW,omitempty"`
+    Borders         *TableBorders   `xml:"tcBorders,omitempty"`
+    Shadow          *ShadowValue    `xml:"shd,omitempty"`
+    Margins         *Margins        `xml:"tcMar,omitempty"`
+    VerticalAlign   *StringValue    `xml:"vAlign,omitempty"`
+    VerticalMerge   *StringValue    `xml:"vMerge,omitempty"`
+    GridSpan        *IntValue       `xml:"gridSpan,omitempty"`
+    HideMark        *EmptyValue     `xml:"hideMark,omitempty"`
+    NoWrap          *EmptyValue     `xml:"noWrap,omitempty"`
 }
 
 /* ДЕКОДИРОВАНИЕ */

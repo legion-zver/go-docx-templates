@@ -17,7 +17,13 @@ var (
     rxVals = regexp.MustCompile("\\s(\\w+)=")
     rxXMLNsVals = regexp.MustCompile("\\s(\\w+)=\"http://schemas.")
     rxURnVals = regexp.MustCompile("\\s(\\w+)=\"urn:")    
-    emptyTags = []string{"top","left","bottom","right","insideV","insideH","shd","js","vAlign","tblLayout","tblHeader","tblInd","tblW","gridCol","pStyle","rFonts","rtl","tcW","bidi","trHeight","lang", "pgSz", "pgMar", "headerReference", "footerReference", "br"}
+
+    emptyTags = []string{"top","left","bottom","right","insideV","insideH",
+                         "shd","jc","vAlign","vMerge", "noWrap", "docGrid",
+                         "b","bCs","i","u", "sz", "szCs", "color", "hideMark",
+                         "tblLayout","tblHeader","tblInd","tblW","gridCol", "gridSpan",
+                         "pStyle","rFonts","rtl","tcW","bidi","trHeight","lang", 
+                         "pgSz", "pgMar", "headerReference", "footerReference", "br", "tab"}
 )
 
 // SimpleDocxFile - файл docx

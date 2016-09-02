@@ -19,9 +19,13 @@ type SizeValue struct {
     Orientation    string    `xml:"orient,attr,omitempty"`
 }
 
+// EmptyValue - пустое значение
+type EmptyValue struct {        
+}
+
 // StringValue - одиночное string значение
 type StringValue struct {    
-    Value    string `xml:"val,attr"`
+    Value    string `xml:"val,attr,omitempty"`
 }
 
 // BoolValue - одиночное bool значение
@@ -43,6 +47,14 @@ type FloatValue struct {
 type ReferenceValue struct {
     Type    string `xml:"type,attr"`
     ID      string `xml:"id,attr"`
+}
+
+// SpacingValue - spacing value
+type SpacingValue struct {
+    After     int64     `xml:"after,attr"`
+    Before    int64     `xml:"before,attr"`
+    Line      int64     `xml:"line,attr"` 
+    LineRule  string    `xml:"lineRule,attr"`
 }
 
 // MarginValue - margin значение

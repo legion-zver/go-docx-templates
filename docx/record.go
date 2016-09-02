@@ -8,15 +8,23 @@ import (
 // RecordItem - record item
 type RecordItem struct {
     Params  RecordParams  `xml:"rPr,omitempty"`
-    Text    string        `xml:"t"`
-    Break   bool          `xml:"br,omitempty"`
+    Text    string        `xml:"t,omitempty"`
+    Tab     bool          `xml:"tab,omitempty"`
+    Break   bool          `xml:"br,omitempty"`    
 }
 
 // RecordParams - params record
 type RecordParams struct {
-    Fonts  *RecordFonts      `xml:"rFonts,omitempty"`
-    Rtl    *IntValue         `xml:"rtl,omitempty"`
-    Lang   *StringValue      `xml:"lang,omitempty"`
+    Fonts      *RecordFonts      `xml:"rFonts,omitempty"`
+    Rtl        *IntValue         `xml:"rtl,omitempty"`
+    Size       *IntValue         `xml:"sz,omitempty"`
+    SizeCs     *IntValue         `xml:"szCs,omitempty"`
+    Lang       *StringValue      `xml:"lang,omitempty"`
+    Underline  *StringValue      `xml:"u,omitempty"`
+    Italic     *EmptyValue       `xml:"i,omitempty"`
+    Bold       *EmptyValue       `xml:"b,omitempty"`
+    BoldCS     *EmptyValue       `xml:"bCs,omitempty"`
+    Color      *StringValue      `xml:"color,omitempty"`
 }
 
 // RecordFonts - fonts in record
@@ -55,6 +63,8 @@ func (item *RecordItem) decode(decoder *xml.Decoder) error {
                         decoder.DecodeElement(&item.Text, &element)
                     } else if element.Name.Local == "br" {
                         item.Break = true
+                    } else if element.Name.Local == "tab" {
+                        item.Tab = true
                     }
                 }
                 case xml.EndElement: {
@@ -94,6 +104,19 @@ func (item *RecordItem) encode(encoder *xml.Encoder) error {
                 return err
             }
             if err := encoder.EncodeToken(startBr.End()); err != nil {
+                return err
+            }
+            if err := encoder.Flush(); err != nil {
+                return err
+            }
+        }
+        // Tab
+        if item.Tab {                   
+            startTab := xml.StartElement{Name:xml.Name{Local:"tab"}} 
+            if err := encoder.EncodeToken(startTab); err != nil {
+                return err
+            }
+            if err := encoder.EncodeToken(startTab.End()); err != nil {
                 return err
             }
             if err := encoder.Flush(); err != nil {

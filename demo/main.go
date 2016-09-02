@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-    template, err := docxt.OpenTemplate("./example.docx")
+    template, err := docxt.OpenTemplate("./e.docx")
     if err != nil {
         fmt.Println(err)
         return

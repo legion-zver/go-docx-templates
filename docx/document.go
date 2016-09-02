@@ -39,11 +39,11 @@ type Body struct {
 
 // BodyParams - параметры тела документа
 type BodyParams struct {
-    HeaderReference ReferenceValue   `xml:"headerReference"`
-    FooterReference ReferenceValue   `xml:"footerReference"`
-    PageSize        SizeValue        `xml:"pgSz"`
-    PageMargin      MarginValue      `xml:"pgMar"`    
-    Bidi            IntValue         `xml:"bidi"`
+    HeaderReference *ReferenceValue   `xml:"headerReference,omitempty"`
+    FooterReference *ReferenceValue   `xml:"footerReference,omitempty"`
+    PageSize         SizeValue        `xml:"pgSz"`
+    PageMargin       MarginValue      `xml:"pgMar"`    
+    Bidi             IntValue         `xml:"bidi"`
 }
 
 /* ДЕКОДИРОВАНИЕ */

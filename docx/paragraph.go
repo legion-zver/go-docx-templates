@@ -14,6 +14,8 @@ type ParagraphItem struct {
 // ParagraphParams - параметры параграфа
 type ParagraphParams struct {
     Style   *StringValue    `xml:"pStyle,omitempty"`
+    Spacing *SpacingValue   `xml:"spacing,omitempty"`
+    Jc      *StringValue    `xml:"jc,omitempty"`
     Bidi    *IntValue       `xml:"bidi,omitempty"`
 }
 

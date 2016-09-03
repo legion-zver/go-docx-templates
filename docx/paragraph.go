@@ -29,6 +29,50 @@ func (item *ParagraphItem) Type() DocItemType {
     return Paragraph
 }
 
+// PlainText - текст
+func (item *ParagraphItem) PlainText() string {
+    var result string
+    for _, i := range item.Items {
+        tmp := i.PlainText()
+        if len(tmp) > 0 {
+            result += tmp
+        }
+    } 
+    return result
+}
+
+// Clone - клонирование
+func (item *ParagraphItem) Clone() DocItem {
+    result := new(ParagraphItem)
+    result.Items = make([]DocItem, 0)
+    for _, i := range item.Items {
+        if i != nil {
+            result.Items = append(result.Items, i.Clone())
+        }
+    }     
+    // Клонирование параметров
+    if item.Params.Bidi != nil {
+        result.Params.Bidi = new(IntValue)
+        result.Params.Bidi.Value = item.Params.Bidi.Value 
+    }
+    if item.Params.Jc != nil {
+        result.Params.Jc = new(StringValue)
+        result.Params.Jc.Value = item.Params.Jc.Value 
+    }
+    if item.Params.Spacing != nil {
+        result.Params.Spacing = new(SpacingValue)
+        result.Params.Spacing.After     = item.Params.Spacing.After
+        result.Params.Spacing.Before    = item.Params.Spacing.Before
+        result.Params.Spacing.Line      = item.Params.Spacing.Line
+        result.Params.Spacing.LineRule  = item.Params.Spacing.LineRule
+    }
+    if item.Params.Style != nil {
+        result.Params.Style = new(StringValue)
+        result.Params.Style.Value = item.Params.Style.Value 
+    }
+    return result
+}
+
 // Декодирование параграфа
 func (item *ParagraphItem) decode(decoder *xml.Decoder) error {
     if decoder != nil {

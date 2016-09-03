@@ -20,6 +20,8 @@ const (
 type DocItem interface {
     Tag() string    
     Type() DocItemType
+    PlainText() string
+    Clone() DocItem
     decode(decoder *xml.Decoder) error
     encode(encoder *xml.Encoder) error
 }

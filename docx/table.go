@@ -27,9 +27,65 @@ func (item *TableItem) Tag() string {
     return "tbl"
 }
 
+// PlainText - текст
+func (item *TableItem) PlainText() string {
+    return ""
+}
+
 // Type - тип элемента
 func (item *TableItem) Type() DocItemType {
     return Table
+}
+
+// Clone - клонирование
+func (item *TableItem) Clone() DocItem {
+    result := new(TableItem)
+    result.Grid.Cols = make([]*WidthValue, 0)
+    for _, col := range item.Grid.Cols {
+        if col != nil {
+            w := new(WidthValue)
+            w.Type = col.Type
+            w.Value = col.Value
+            result.Grid.Cols = append(result.Grid.Cols, w)
+        }
+    }
+    if item.Params.DocGrid != nil {
+        result.Params.DocGrid = new(IntValue)
+        result.Params.DocGrid.Value = item.Params.DocGrid.Value
+    }
+    if item.Params.Ind != nil {
+        result.Params.Ind = new(WidthValue)
+        result.Params.Ind.Type = item.Params.Ind.Type
+        result.Params.Ind.Value = item.Params.Ind.Value
+    }    
+    if item.Params.Jc != nil {
+        result.Params.Jc = new(StringValue)        
+        result.Params.Jc.Value = item.Params.Jc.Value
+    }
+    if item.Params.Layout != nil {
+        result.Params.Layout = new(TableLayout)
+        result.Params.Layout.Type = item.Params.Layout.Type
+    }
+    if item.Params.Shadow != nil {
+        result.Params.Shadow = new(ShadowValue)
+        result.Params.Shadow.From(item.Params.Shadow)       
+    }
+    if item.Params.Width != nil {
+        result.Params.Width = new(WidthValue)
+        result.Params.Width.From(item.Params.Width)
+    }
+    if item.Params.Borders != nil {
+        result.Params.Borders = new(TableBorders)
+        result.Params.Borders.From(item.Params.Borders)    
+    }
+    // Клонирование строк
+    result.Rows = make([]*TableRow, 0)
+    for _, row := range item.Rows {
+        if row != nil {
+            result.Rows = append(result.Rows, row.Clone())
+        }
+    }
+    return result
 }
 
 // TableParams - Params table 
@@ -58,6 +114,24 @@ type TableBorders struct {
     InsideV  *TableBorder    `xml:"insideV,omitempty"`
 }
 
+// From (TableBorders)
+func (b *TableBorders) From(b1 *TableBorders) {
+    if b1 != nil {
+        b.Top.From(&b1.Top)
+        b.Left.From(&b1.Left)
+        b.Bottom.From(&b1.Bottom)
+        b.Right.From(&b1.Right)
+        if b1.InsideH != nil {
+            b.InsideH = new(TableBorder)
+            b.InsideH.From(b1.InsideH)
+        }
+        if b1.InsideV != nil {
+            b.InsideV = new(TableBorder)
+            b.InsideV.From(b1.InsideV)
+        }
+    }
+}
+
 // TableBorder in borders
 type TableBorder struct {
     Value   string  `xml:"val,attr"`
@@ -66,6 +140,18 @@ type TableBorder struct {
     Space   int64   `xml:"space,attr"`
     Shadow  int64   `xml:"shadow,attr"`
     Frame   int64   `xml:"frame,attr"`
+}
+
+// From (TableBorder)
+func (b *TableBorder) From(b1 *TableBorder) {
+    if b1 != nil {
+        b.Value = b1.Value
+        b.Color = b1.Color
+        b.Frame = b1.Frame
+        b.Shadow = b1.Shadow
+        b.Size = b1.Size
+        b.Space = b1.Space
+    }
 }
 
 // TableRow - row in table
@@ -98,6 +184,68 @@ type TableCellParams struct {
     GridSpan        *IntValue       `xml:"gridSpan,omitempty"`
     HideMark        *EmptyValue     `xml:"hideMark,omitempty"`
     NoWrap          *EmptyValue     `xml:"noWrap,omitempty"`
+}
+
+// Clone (TableCell) - клонирование ячейки
+func (cell *TableCell) Clone() *TableCell {
+    result := new(TableCell)
+    if cell.Params.GridSpan != nil {
+        result.Params.GridSpan = new(IntValue)
+        result.Params.GridSpan.Value = cell.Params.GridSpan.Value 
+    }
+    if cell.Params.HideMark != nil {
+        result.Params.HideMark = new(EmptyValue)         
+    }
+    if cell.Params.NoWrap != nil {
+        result.Params.NoWrap = new(EmptyValue)         
+    }
+    if cell.Params.Shadow != nil {
+        result.Params.Shadow = new(ShadowValue)
+        result.Params.Shadow.From(cell.Params.Shadow)                 
+    }
+    if cell.Params.VerticalAlign != nil {
+        result.Params.VerticalAlign = new(StringValue)
+        result.Params.VerticalAlign.Value = cell.Params.VerticalAlign.Value 
+    }
+    if cell.Params.VerticalMerge != nil {
+        result.Params.VerticalMerge = new(StringValue)
+        result.Params.VerticalMerge.Value = cell.Params.VerticalMerge.Value 
+    }
+    if cell.Params.Margins != nil {
+        result.Params.Margins = new(Margins)
+        result.Params.Margins.From(cell.Params.Margins)
+    }
+    if cell.Params.Width != nil {
+        result.Params.Width = new(WidthValue)
+        result.Params.Width.From(cell.Params.Width)
+    }
+    if cell.Params.Borders != nil {
+        result.Params.Borders = new(TableBorders)
+        result.Params.Borders.From(cell.Params.Borders)
+    }
+    result.Items = make([]DocItem, 0)
+    for _, item := range cell.Items {
+        if item != nil {
+            result.Items = append(result.Items, item.Clone())
+        }
+    }
+    return result
+}
+
+// Clone (TableRow) - клонирование строки таблицы
+func (row *TableRow) Clone() *TableRow {
+    result := new(TableRow)
+    result.Params = row.Params
+    result.OtherParams = new(TableParamsEx)
+    result.OtherParams.Shadow = row.OtherParams.Shadow
+    // Клонируем ячейки
+    result.Cells = make([]*TableCell, 0)
+    for _, cell := range row.Cells {
+        if cell != nil {
+            result.Cells = append(result.Cells, cell.Clone())
+        }
+    }
+    return result
 }
 
 /* ДЕКОДИРОВАНИЕ */

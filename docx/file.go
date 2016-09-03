@@ -60,6 +60,11 @@ func OpenFile(fileName string) (*SimpleDocxFile,error) {
     return d, nil 
 }
 
+// Render (SimpleDocxFile) - рендер шаблона
+func (f *SimpleDocxFile) Render(v interface{}) error {
+    return renderTemplateDocument(f.document, v)
+}
+
 // Save (SimpleDocxFile) - сохранить
 func (f *SimpleDocxFile) Save(fileName string) error {
     if f.zipFile != nil {

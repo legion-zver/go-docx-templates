@@ -46,6 +46,62 @@ func (item *RecordItem) Type() DocItemType {
     return Record
 }
 
+// PlainText - текст
+func (item *RecordItem) PlainText() string {
+    return item.Text
+}
+
+// Clone - клонирование
+func (item *RecordItem) Clone() DocItem {
+    result := new(RecordItem)
+    result.Text  = item.Text
+    result.Tab   = item.Tab
+    result.Break = item.Break
+    // Клонируем параметры    
+    if item.Params.Bold != nil {
+        result.Params.Bold = new(EmptyValue)
+    }
+    if item.Params.BoldCS != nil {
+        result.Params.BoldCS = new(EmptyValue)
+    }
+    if item.Params.Italic != nil {
+        result.Params.Italic = new(EmptyValue)
+    }
+    if item.Params.Underline != nil {
+        result.Params.Underline = new(StringValue)
+        result.Params.Underline.Value = item.Params.Underline.Value
+    }
+    if item.Params.Color != nil {
+        result.Params.Color = new(StringValue)
+        result.Params.Color.Value = item.Params.Color.Value
+    }
+    if item.Params.Lang != nil {
+        result.Params.Lang = new(StringValue)
+        result.Params.Lang.Value = item.Params.Lang.Value
+    }
+    if item.Params.Rtl != nil {
+        result.Params.Rtl = new(IntValue)
+        result.Params.Rtl.Value = item.Params.Rtl.Value
+    }
+    if item.Params.Size != nil {
+        result.Params.Size = new(IntValue)
+        result.Params.Size.Value = item.Params.Size.Value
+    }
+    if item.Params.SizeCs != nil {
+        result.Params.SizeCs = new(IntValue)
+        result.Params.SizeCs.Value = item.Params.SizeCs.Value
+    }
+    if item.Params.Fonts != nil {
+        result.Params.Fonts = new(RecordFonts)
+        result.Params.Fonts.ASCII      = item.Params.Fonts.ASCII
+        result.Params.Fonts.CS         = item.Params.Fonts.CS
+        result.Params.Fonts.EastAsia   = item.Params.Fonts.EastAsia
+        result.Params.Fonts.HandleANSI = item.Params.Fonts.HandleANSI
+        result.Params.Fonts.HandleInt  = item.Params.Fonts.HandleInt
+    }
+    return result
+}
+
 // Декодирование записи
 func (item *RecordItem) decode(decoder *xml.Decoder) error {
     if decoder != nil {

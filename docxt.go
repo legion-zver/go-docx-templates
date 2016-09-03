@@ -1,6 +1,7 @@
 package docxt
 
 import (
+    "errors"
     "github.com/legion-zver/go-docx-templates/docx"
 )
 
@@ -21,4 +22,12 @@ func OpenTemplate(fileName string) (*DocxTemplateFile, error) {
 // Save (DocxTemplateFile)
 func (t *DocxTemplateFile) Save(fileName string) error {
     return t.file.Save(fileName)
+}
+
+// Render (SimpleDocxFile) - рендер шаблона
+func (t *DocxTemplateFile) Render(v interface{}) error {
+    if t.file != nil {
+        return t.file.Render(v)
+    }
+    return errors.New("Not loading template file") 
 }

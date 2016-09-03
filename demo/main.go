@@ -33,7 +33,7 @@ func main() {
         TestItemStruct{"1","2",[]TestItemStruct2{TestItemStruct2{"3","4"},TestItemStruct2{"5","6"}}},
         TestItemStruct{"3","4",[]TestItemStruct2{TestItemStruct2{"7","8"},TestItemStruct2{"9","10"}}},
     }    
-    if err := template.Render(test); err != nil {
+    if err := template.RenderTemplate(test); err != nil {
         fmt.Println(err)
         return
     }

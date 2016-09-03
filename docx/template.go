@@ -1,7 +1,7 @@
 package docx
 
 import (
-    "fmt"
+    //"fmt"
     "regexp"
     "errors"
     "strings"  
@@ -30,11 +30,45 @@ func renderTemplateDocument(document *Document, v interface{}) error {
     return errors.New("Not valid template document")
 }
 
+// Поиск элементов шаблона и спаивания текстовых элементов
+func findTemplatePatternsInParagraph(p *ParagraphItem) {
+    if p != nil {
+        // Перебор элементов параграфа и поиск начал {{ и конца }}                
+        var startItem *RecordItem        
+        for index := 0; index < len(p.Items); index++ {
+            i := p.Items[index]
+            if i.Type() == Record {
+                record := i.(*RecordItem)
+                if record != nil {
+                    if startItem != nil {
+                        startItem.Text += record.Text
+                        // Удаляем элемент                        
+                        p.Items = append(p.Items[:index], p.Items[index+1:]...)
+                        // Проверка на конец
+                        if strings.Index(startItem.Text, "}}") < 0 {
+                            index--
+                            continue
+                        }
+                        //fmt.Println("Merge records = ", startItem.Text)
+                    } else {
+                        if strings.Index(record.Text, "{{") >= 0 {
+                            startItem = record                            
+                            continue
+                        }
+                    }
+                } 
+            }
+            startItem = nil            
+        }
+    }
+}
+
 // Рендер элемента документа
 func renderDocItem(item DocItem, v interface{}) error {
     switch elem := item.(type) {
         // Параграф
         case *ParagraphItem: {
+            findTemplatePatternsInParagraph(elem)
             for _, i := range elem.Items {
                 if err := renderDocItem(i, v); err != nil {
                     return err
@@ -44,37 +78,40 @@ func renderDocItem(item DocItem, v interface{}) error {
         // Запись
         case *RecordItem: {
             if len(elem.Text) > 0 {
-                fmt.Println(elem.Text)
-                out, err := raymond.Render(modeTemplateText(elem.Text), v)
-                if err != nil {
-                    return err
+                if rxTemplateItem.MatchString(elem.Text) {
+                    out, err := raymond.Render(modeTemplateText(elem.Text), v)
+                    if err != nil {
+                        return err
+                    }
+                    elem.Text = out
                 }
-                elem.Text = out
             }
         }
         // Таблица
         case *TableItem: {            
-            for rowIndex, row := range elem.Rows {
+            for rowIndex := 0; rowIndex < len(elem.Rows); rowIndex++ {
+                row := elem.Rows[rowIndex]
                 if row != nil {
                     // Если массив
                     if obj, ok := haveArrayInRow(row, v); ok {
                         lines       := objToLines(obj)
                         template    := row.Clone()
-                        currentRow  := row
-                        index       := rowIndex
+                        currentRow  := row                        
                         for _, line := range lines {                            
                             if currentRow == nil {
                                 currentRow = template.Clone()
                                 // Insert Row
-                                elem.Rows = append(elem.Rows[:index], append([]*TableRow{currentRow}, elem.Rows[index:]...)...)
+                                elem.Rows = append(elem.Rows[:rowIndex], append([]*TableRow{currentRow}, elem.Rows[rowIndex:]...)...)                                
                             }
                             if err := renderRow(currentRow, &line); err != nil {
                                 return err
                             }
                             currentRow = nil
-                            index++
-                        }
+                            rowIndex++
+                        }                        
                         template = nil
+                        // Балансируем индекс                        
+                        rowIndex--
                         continue
                     }
                     // Если нет
@@ -94,8 +131,7 @@ func renderDocItem(item DocItem, v interface{}) error {
                         if rxMergeCellV.MatchString(plainText) {
                             if rowIndex > 0 {
                                 topCell := elem.Rows[rowIndex-1].Cells[cellIndex]                                
-                                if topCell != nil {
-                                    fmt.Println(plainText, " == ", plainTextFromTableCell(topCell))
+                                if topCell != nil {                                    
                                     if plainText == plainTextFromTableCell(topCell) {
                                         cell.Params.VerticalMerge = new(StringValue)                                                                                
                                         cell.Items = make([]DocItem, 0) // Clear
@@ -165,10 +201,11 @@ func renderRow(row *TableRow, v interface{}) error {
 }
 
 // Модифицируем текст шаблона
-func modeTemplateText(tpl string) string {    
+func modeTemplateText(tpl string) string {
+    //fmt.Println("Mode: ", tpl)    
     tpl = strings.Replace(tpl, "{{", "{{{", -1)
 	tpl = strings.Replace(tpl, "}}", "}}}", -1)
-    tpl = strings.Replace(tpl,".","_",-1)    
+    tpl = strings.Replace(tpl,".","_",-1)
     return strings.Replace(tpl,":length","_length",-1) 
 }
 

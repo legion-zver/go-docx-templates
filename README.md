@@ -1,4 +1,4 @@
-# DOCX templater in GoLang
+# DOCX templater on GoLang
 
 Simple **.docx** (MS Word XML document) template based document generator using handlebars.
 

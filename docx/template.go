@@ -12,6 +12,8 @@ import (
 
 var (
     rxTemplateItem  = regexp.MustCompile(`\{\{\s*([\w|\.]+)\s*\}\}`)
+    rxMergeCellV    = regexp.MustCompile(`\[\s?v-merge\s?\]`)
+    rxMergeIndex    = regexp.MustCompile(`\[\s?index\s?:\s?[\d|\.|\,]+\s?\]`)
 )
 
 // Функционал шаблонизатора
@@ -82,11 +84,64 @@ func renderDocItem(item DocItem, v interface{}) error {
                 }
             }
             // После обхода таблицы проходимся по ячейкам и проверяем merge флаги
+            // С конца таблицы, проверяем по ячейкам
+            for rowIndex := len(elem.Rows)-1; rowIndex >= 0; rowIndex-- {
+                // Обходим ячейки
+                for cellIndex, cell := range elem.Rows[rowIndex].Cells {
+                    if len(cell.Items) > 0 {
+                        plainText := plainTextFromTableCell(cell)
+                        // Если найден флаг соединения
+                        if rxMergeCellV.MatchString(plainText) {
+                            if rowIndex > 0 {
+                                topCell := elem.Rows[rowIndex-1].Cells[cellIndex]                                
+                                if topCell != nil {
+                                    fmt.Println(plainText, " == ", plainTextFromTableCell(topCell))
+                                    if plainText == plainTextFromTableCell(topCell) {
+                                        cell.Params.VerticalMerge = new(StringValue)                                                                                
+                                        cell.Items = make([]DocItem, 0) // Clear
+                                        continue
+                                    }
+                                }
+                            }
+                            cell.Params.VerticalMerge = new(StringValue)
+                            cell.Params.VerticalMerge.Value = "restart"
+                            // Очищаяем контент ячейки от индексов и merge флагов
+                            removeMergeIndexFromCell(cell)
+                        }
+                    }
+                }
+            } 
         }
     }
     return nil
 }
 
+// removeMergeIndexFromCell - очищаяем контент ячейки от индексов и merge флагов
+func removeMergeIndexFromCell(cell *TableCell) {
+    if cell != nil {
+        for _, item := range cell.Items {
+            removeMergeIndexFromDocItem(item)
+        }
+    }
+}
+
+// removeMergeIndexFromDocItem - очищаяем контент элемента документа от индексов и merge флагов
+func removeMergeIndexFromDocItem(item DocItem) {
+    if item != nil {
+        switch elem := item.(type) {
+            case *ParagraphItem: {
+                for _, i := range elem.Items {
+                    removeMergeIndexFromDocItem(i)
+                }
+            }
+            case *RecordItem: {                
+                elem.Text = rxMergeIndex.ReplaceAllString(rxMergeCellV.ReplaceAllString(elem.Text, ""),"")
+            }            
+        }
+    }
+}
+
+// objToLines - раскладываем объект на строки
 func objToLines(v interface{}) []map[string]interface{} {
     node := new(graph.Node)
     node.FromObject(v)

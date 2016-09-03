@@ -12,9 +12,13 @@ type TestStruct struct {
 
 type TestItemStruct struct {
     Column1 string
-    Column2 string
-    Column3 string
-    Column4 string
+    Column2 string    
+    SubItems []TestItemStruct2
+}
+
+type TestItemStruct2 struct {
+    Column1 string
+    Column4 string    
 }
 
 func main() {
@@ -26,10 +30,8 @@ func main() {
     test := new(TestStruct)
     test.FileName = "example.docx"
     test.Items = []TestItemStruct{
-        TestItemStruct{"1","2","3","4"},
-        TestItemStruct{"2","3","4","1"},
-        TestItemStruct{"3","4","1","2"},
-        TestItemStruct{"4","1","2","3"},
+        TestItemStruct{"1","2",[]TestItemStruct2{TestItemStruct2{"3","4"},TestItemStruct2{"5","6"}}},
+        TestItemStruct{"3","4",[]TestItemStruct2{TestItemStruct2{"7","8"},TestItemStruct2{"9","10"}}},
     }    
     if err := template.Render(test); err != nil {
         fmt.Println(err)

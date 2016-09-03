@@ -1,7 +1,8 @@
 package docx
 
 
-import (  
+import ( 
+    "io" 
     "os"  
     "bufio"      
     "bytes"
@@ -63,6 +64,50 @@ func OpenFile(fileName string) (*SimpleDocxFile,error) {
 // Render (SimpleDocxFile) - рендер шаблона
 func (f *SimpleDocxFile) Render(v interface{}) error {
     return renderTemplateDocument(f.document, v)
+}
+
+// Write (SimpleDocxFile)
+func (f *SimpleDocxFile) Write(writer io.Writer) error {
+    if f.zipFile != nil {
+        if f.document != nil {
+            w := zip.NewWriter(writer)
+            defer w.Close()
+            // Перебор файлов в Zip архиве        
+            for _, zf := range f.zipFile.File {
+                if zf != nil {                    
+                    // Загрузка документа
+                    if zf.Name == "word/document.xml" {
+                        wzf, _ := w.Create(zf.Name)
+                        if wzf != nil {
+                            if b, err := wordDocumentToXML(f.document); b != nil && err == nil {                                
+                                wzf.Write([]byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"))                                
+                                wzf.Write(b)
+                            }
+                        }
+                    } else {        
+                        r, _ := zf.Open()                
+                        if r != nil {
+                            wzf, _ := w.Create(zf.Name)                        
+                            if wzf != nil {
+                                b, err := ioutil.ReadAll(r)
+                                if err == nil {                                    
+                                    wzf.Write(b)
+                                }
+                            }
+                            r.Close()
+                        }
+                    }
+                }
+            } 
+            err := w.Flush()
+            if err != nil {
+                return err
+            }
+            return nil
+        }
+        return errors.New("Not valid document")
+    }
+    return errors.New("Not loaded file")
 }
 
 // Save (SimpleDocxFile) - сохранить

@@ -1,6 +1,7 @@
 package docxt
 
 import (
+    "io"
     "errors"
     "github.com/legion-zver/go-docx-templates/docx"
 )
@@ -24,8 +25,13 @@ func (t *DocxTemplateFile) Save(fileName string) error {
     return t.file.Save(fileName)
 }
 
-// Render (SimpleDocxFile) - рендер шаблона
-func (t *DocxTemplateFile) Render(v interface{}) error {
+// Write (DocxTemplateFile)
+func (t *DocxTemplateFile) Write(w io.Writer) error {
+    return t.file.Write(w)
+}
+
+// RenderTemplate (SimpleDocxFile) - рендер шаблона
+func (t *DocxTemplateFile) RenderTemplate(v interface{}) error {
     if t.file != nil {
         return t.file.Render(v)
     }

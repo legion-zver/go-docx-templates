@@ -134,7 +134,9 @@ func renderDocItem(item DocItem, v interface{}) error {
                                 if topCell != nil {                                    
                                     if plainText == plainTextFromTableCell(topCell) {
                                         cell.Params.VerticalMerge = new(StringValue)                                                                                
-                                        cell.Items = make([]DocItem, 0) // Clear
+                                        for _, i := range cell.Items {
+                                            clearTextFromDocItem(i)
+                                        }
                                         continue
                                     }
                                 }
@@ -150,6 +152,21 @@ func renderDocItem(item DocItem, v interface{}) error {
         }
     }
     return nil
+}
+
+func clearTextFromDocItem(item DocItem) {
+    if item != nil {
+        switch elem := item.(type) {
+            case *ParagraphItem: {
+                for _, i := range elem.Items {
+                    clearTextFromDocItem(i)
+                }
+            }
+            case *RecordItem: {
+                elem.Text = ""
+            }
+        }
+    }
 }
 
 // removeMergeIndexFromCell - очищаяем контент ячейки от индексов и merge флагов

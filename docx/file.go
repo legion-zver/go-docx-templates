@@ -30,7 +30,8 @@ var (
 // SimpleDocxFile - файл docx
 type SimpleDocxFile struct {
     zipFile  *zip.ReadCloser
-    document *Document
+    headers   map[string]*Header
+    document *Document    
 }
 
 // OpenFile - Открытие файла DOCX

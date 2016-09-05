@@ -49,3 +49,38 @@ func (h *Header) Decode(reader io.Reader) error {
     }
     return errors.New("Error create decoder")
 }
+
+/* КОДИРОВАНИЕ */
+
+// Encode - кодирование
+func (h *Header) Encode(writer io.Writer) error {
+    encoder := xml.NewEncoder(writer)
+    if encoder != nil {
+        // Начало документа
+        var attrs = make([]xml.Attr, 0)
+        for key, val := range h.Scheme {
+            attrs = append(attrs, xml.Attr{Name:xml.Name{Local:key}, Value: val})
+        } 
+        if len(h.SkipScheme) > 0 {
+            attrs = append(attrs, xml.Attr{Name:xml.Name{Local:"Ignorable"}, Value: h.SkipScheme})
+        }
+        hStart := xml.StartElement{Name: xml.Name{Local:"hdr"}, Attr: attrs}
+        err := encoder.EncodeToken(hStart)
+        if err != nil {
+            return err
+        }
+        // Отдаем кодирование глубже - элементам        
+        for _, item := range h.Items {            
+            if err := item.encode(encoder); err != nil {
+                return err
+            }
+        }
+        // Конец документа
+        err = encoder.EncodeToken(hStart.End())
+        if err != nil {
+            return err
+        }        
+        return encoder.Flush()
+    }
+    return errors.New("Error create encoder")
+}

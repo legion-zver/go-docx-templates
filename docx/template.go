@@ -30,6 +30,19 @@ func renderTemplateDocument(document *Document, v interface{}) error {
     return errors.New("Not valid template document")
 }
 
+func renderTemplateHeader(header *Header, v interface{}) error {
+    if header != nil {        
+        for _, item := range header.Items {
+            if err := renderDocItem(item, v); err != nil {
+                return err
+            }
+        }
+        return nil
+    }
+    return errors.New("Not valid template document")
+}
+
+
 // Поиск элементов шаблона и спаивания текстовых элементов
 func findTemplatePatternsInParagraph(p *ParagraphItem) {
     if p != nil {

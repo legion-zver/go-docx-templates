@@ -8,6 +8,7 @@ import (
     "bytes"
     "errors"    
     "regexp"
+    "strings"
     "io/ioutil"    
     "archive/zip"    
 )
@@ -41,6 +42,7 @@ func OpenFile(fileName string) (*SimpleDocxFile,error) {
 		return nil, err
 	}    
     d := new(SimpleDocxFile)
+    d.headers = make(map[string]*Header)    
     d.zipFile = z
     // Перебор файлов в Zip архиве
     for _, f := range z.File {
@@ -55,8 +57,19 @@ func OpenFile(fileName string) (*SimpleDocxFile,error) {
                 d.document.Decode(reader)
                 if err := reader.Close(); err != nil {
                     return nil, err
+                }                
+            } else if strings.Index(f.Name, "word/header") >= 0 {
+                reader, err := f.Open()
+                if err != nil {
+                    return nil, err
                 }
-            }
+                header := new(Header)
+                header.Decode(reader)
+                if err := reader.Close(); err != nil {
+                    return nil, err
+                }
+                d.headers[f.Name] = header
+            } 
         }
     }    
     return d, nil 
@@ -65,6 +78,20 @@ func OpenFile(fileName string) (*SimpleDocxFile,error) {
 // Render (SimpleDocxFile) - рендер шаблона
 func (f *SimpleDocxFile) Render(v interface{}) error {
     return renderTemplateDocument(f.document, v)
+}
+
+// RenderHeader (SimpleDocxFile) - рендер заголовка шаблона
+func (f *SimpleDocxFile) RenderHeader(index int, v interface{}) error {
+    pos := 0
+    for _, header := range f.headers {
+        if header != nil {
+            if pos == index {
+                return renderTemplateHeader(header, v)
+            }
+            pos++
+        }
+    }
+    return nil
 }
 
 // Write (SimpleDocxFile)
@@ -81,6 +108,14 @@ func (f *SimpleDocxFile) Write(writer io.Writer) error {
                         wzf, _ := w.Create(zf.Name)
                         if wzf != nil {
                             if b, err := wordDocumentToXML(f.document); b != nil && err == nil {                                
+                                wzf.Write([]byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"))                                
+                                wzf.Write(b)
+                            }
+                        }
+                    } else if header, ok := f.headers[zf.Name]; ok && strings.Index(zf.Name, "word/header") >= 0 {
+                        wzf, _ := w.Create(zf.Name)
+                        if wzf != nil {
+                            if b, err := wordHeaderToXML(header); b != nil && err == nil {                                
                                 wzf.Write([]byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"))                                
                                 wzf.Write(b)
                             }
@@ -159,6 +194,31 @@ func (f *SimpleDocxFile) Save(fileName string) error {
         return errors.New("Not valid document")
     }
     return errors.New("Not loaded file")
+}
+
+func wordHeaderToXML(h *Header) (data []byte, err error) {
+    if h != nil {
+        var buffer bytes.Buffer
+        writer := bufio.NewWriter(&buffer)
+        err = h.Encode(writer)
+        if err == nil && buffer.Len() > 0 {
+            data = buffer.Bytes()
+            buffer.Reset()
+            // Замены            
+            data = bytes.Replace(data, []byte(" Ignorable="), []byte(" mc:Ignorable="), 1)
+            data = bytes.Replace(data, []byte(" id="), []byte(" r:id="), -1) 
+            // Замены empty tags
+            for _, emptyTag := range emptyTags {
+                data = bytes.Replace(data, []byte("></"+emptyTag+">"), []byte(" />"), -1)
+            }
+            data = rxStartTags.ReplaceAll(data, []byte("<w:$1"))
+            data = rxEndTags.ReplaceAll(data, []byte("</w:$1"))
+            data = rxXMLNsVals.ReplaceAll(data, []byte(" xmlns:$1=\"http://schemas."))
+            data = rxURnVals.ReplaceAll(data, []byte(" xmlns:$1=\"urn:"))
+            data = rxVals.ReplaceAll(data, []byte(" w:$1="))            
+        }
+    }
+    return
 }
 
 func wordDocumentToXML(d *Document) (data []byte, err error) {

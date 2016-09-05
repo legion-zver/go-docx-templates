@@ -37,3 +37,11 @@ func (t *DocxTemplateFile) RenderTemplate(v interface{}) error {
     }
     return errors.New("Not loading template file") 
 }
+
+// RenderHeaderTemplate (SimpleDocxFile) - рендер шаблона
+func (t *DocxTemplateFile) RenderHeaderTemplate(indexHeader int, v interface{}) error {
+    if t.file != nil {
+        return t.file.RenderHeader(indexHeader, v)
+    }
+    return errors.New("Not loading template file") 
+}

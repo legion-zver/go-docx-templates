@@ -14,6 +14,7 @@ var (
     rxTemplateItem  = regexp.MustCompile(`\{\{\s*([\w|\.]+)\s*\}\}`)
     rxMergeCellV    = regexp.MustCompile(`\[\s?v-merge\s?\]`)
     rxMergeIndex    = regexp.MustCompile(`\[\s?index\s?:\s?[\d|\.|\,]+\s?\]`)
+    rxBrCellV       = regexp.MustCompile(`\[\s?BR\s?\]`)
 )
 
 // Функционал шаблонизатора
@@ -136,7 +137,8 @@ func renderDocItem(item DocItem, v interface{}) error {
             // После обхода таблицы проходимся по ячейкам и проверяем merge флаги
             // С конца таблицы, проверяем по ячейкам
             for rowIndex := len(elem.Rows)-1; rowIndex >= 0; rowIndex-- {
-                // Обходим ячейки
+                setBoldRight := false
+                // Обходим ячейки                
                 for cellIndex, cell := range elem.Rows[rowIndex].Cells {
                     if len(cell.Items) > 0 {
                         plainText := plainTextFromTableCell(cell)
@@ -155,9 +157,18 @@ func renderDocItem(item DocItem, v interface{}) error {
                                 }
                             }
                             cell.Params.VerticalMerge = new(StringValue)
-                            cell.Params.VerticalMerge.Value = "restart"
-                            // Очищаяем контент ячейки от индексов и merge флагов
-                            removeMergeIndexFromCell(cell)
+                            cell.Params.VerticalMerge.Value = "restart"                            
+                            removeTemplateFromCell(rxMergeCellV, cell)
+                            removeTemplateFromCell(rxMergeIndex, cell)
+                        } 
+                        // Проверка на флаг усановки жирного шрифта во всех ячейках справа
+                        if rxBrCellV.MatchString(plainText) {
+                            setBoldRight = !setBoldRight
+                            removeTemplateFromCell(rxBrCellV, cell)
+                        }
+                        // Если флаг выставлен, применяем жирный стиль у шрифта
+                        if setBoldRight {
+                            setBoldToCell(true, cell)
                         }
                     }
                 }
@@ -182,26 +193,63 @@ func clearTextFromDocItem(item DocItem) {
     }
 }
 
-// removeMergeIndexFromCell - очищаяем контент ячейки от индексов и merge флагов
-func removeMergeIndexFromCell(cell *TableCell) {
+func setBoldToCell(bold bool, cell *TableCell) {    
     if cell != nil {
         for _, item := range cell.Items {
-            removeMergeIndexFromDocItem(item)
+            setBoldToDocItem(bold, item)
         }
     }
 }
 
-// removeMergeIndexFromDocItem - очищаяем контент элемента документа от индексов и merge флагов
-func removeMergeIndexFromDocItem(item DocItem) {
+func setBoldToDocItem(bold bool, item DocItem) {
     if item != nil {
         switch elem := item.(type) {
             case *ParagraphItem: {
                 for _, i := range elem.Items {
-                    removeMergeIndexFromDocItem(i)
+                    setBoldToDocItem(bold, i)
                 }
             }
             case *RecordItem: {                
-                elem.Text = rxMergeIndex.ReplaceAllString(rxMergeCellV.ReplaceAllString(elem.Text, ""),"")
+                if bold {
+                    if elem.Params.Bold == nil {
+                        elem.Params.Bold = new(EmptyValue)
+                    }
+                    if elem.Params.BoldCS == nil {
+                        elem.Params.BoldCS = new(EmptyValue)
+                    }
+                } else {
+                    if elem.Params.Bold != nil {
+                        elem.Params.Bold = nil
+                    }
+                    if elem.Params.BoldCS != nil {
+                        elem.Params.BoldCS = nil
+                    }
+                }
+            }            
+        }
+    }
+}
+
+// removeTemplateFromCell - очищаяем контент ячейки от шаблона
+func removeTemplateFromCell(template *regexp.Regexp, cell *TableCell) {    
+    if cell != nil && template != nil{
+        for _, item := range cell.Items {
+            removeTemplateFromDocItem(template, item)
+        }
+    }
+}
+
+// removeTemplateFromDocItem - очищаяем контент элемента документа от шаблона
+func removeTemplateFromDocItem(template *regexp.Regexp, item DocItem) {
+    if item != nil && template != nil{
+        switch elem := item.(type) {
+            case *ParagraphItem: {
+                for _, i := range elem.Items {
+                    removeTemplateFromDocItem(template, i)
+                }
+            }
+            case *RecordItem: {                
+                elem.Text = template.ReplaceAllString(elem.Text, "")
             }            
         }
     }

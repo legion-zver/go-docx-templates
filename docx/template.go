@@ -45,6 +45,8 @@ func renderTemplateHeader(header *Header, v interface{}) error {
 
 
 // Поиск элементов шаблона и спаивания текстовых элементов
+// Note: This merge text in one tag and leaves styles only from first element
+// Pseudo example: <red>Red<red><blue>Blue</blue> --> <red>RedBlue</red>
 func findTemplatePatternsInParagraph(p *ParagraphItem) {
     if p != nil {
         // Перебор элементов параграфа и поиск начал {{ и конца }}                
@@ -82,7 +84,7 @@ func renderDocItem(item DocItem, v interface{}) error {
     switch elem := item.(type) {
         // Параграф
         case *ParagraphItem: {
-            findTemplatePatternsInParagraph(elem)
+            //findTemplatePatternsInParagraph(elem)
             for _, i := range elem.Items {
                 if err := renderDocItem(i, v); err != nil {
                     return err

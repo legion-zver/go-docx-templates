@@ -1,13 +1,13 @@
 package docx
 
 import (
-    //"fmt"
+    // "fmt"
     "regexp"
     "errors"
     "strings"
     "reflect"
     "github.com/aymerick/raymond"
-    "github.com/legion-zver/go-docx-templates/graph"
+    "github.com/qida/go-docx-templates/graph"
 )
 
 var (

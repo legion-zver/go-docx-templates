@@ -3,7 +3,7 @@ package docxt
 import (
     "io"
     "errors"
-    "github.com/legion-zver/go-docx-templates/docx"
+    "github.com/qida/go-docx-templates/docx"
 )
 
 // DocxTemplateFile - файл шаблонизатора
@@ -35,7 +35,7 @@ func (t *DocxTemplateFile) RenderTemplate(v interface{}) error {
     if t.file != nil {
         return t.file.Render(v)
     }
-    return errors.New("Not loading template file") 
+    return errors.New("Not loading template file")
 }
 
 // RenderHeaderTemplate (SimpleDocxFile) - рендер шаблона
@@ -43,5 +43,5 @@ func (t *DocxTemplateFile) RenderHeaderTemplate(indexHeader int, v interface{}) 
     if t.file != nil {
         return t.file.RenderHeader(indexHeader, v)
     }
-    return errors.New("Not loading template file") 
+    return errors.New("Not loading template file")
 }
